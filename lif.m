@@ -7,23 +7,27 @@ function  varargout = lif( fstr , varargin )
 % function name is one of the following strings:
 % 
 % 
-% C = lif( 'default' ). Returns struct C with a default set of network
-%   parameters. These are chosen to match, as mutch as possible, values
-%   taken from Lewis CM, Ni J, Wunderle T, Jendritza P, Lazar A, Diester I,
-%   & Fries P. (2020). "Cortical resonance selects coherent input."
-%   bioRxiv: 2020.2012.2009.417782. The 'C' is for 'C'onstants, as opposed
-%   to variables.
+% C = lif( 'default' )
+%   
+%   Returns struct C with a default set of network parameters. These are
+%   chosen to match, as mutch as possible, values taken from Lewis CM, Ni
+%   J, Wunderle T, Jendritza P, Lazar A, Diester I, & Fries P. (2020).
+%   "Cortical resonance selects coherent input." bioRxiv:
+%   2020.2012.2009.417782. The 'C' is for 'C'onstants, as opposed to
+%   variables.
 % 
 % 
 % N = lif( 'network' )
-% N = lif( 'network' , C ). Returns struct N with the instantiation of a
-%   LIF neural network using parameters in struct C. If C is not provided
-%   then default parameters are used.
+% N = lif( 'network' , C )
+%   
+%   Returns struct N with the instantiation of a LIF neural network using
+%   parameters in struct C. If C is not provided then default parameters
+%   are used.
 % 
 % 
 %         I = lif( 'input' , N , off , on )
-% [ I , N ] = lif( 'input' , N , off , on , type , par ).
-% [ I , N ] = lif( 'input' , N , off , on , ... , 'repeat' , rep ).
+% [ I , N ] = lif( 'input' , N , off , on , type , par )
+% [ I , N ] = lif( 'input' , N , off , on , ... , 'repeat' , rep )
 % 
 %   Returns array I containing input current in nA for the LIF neurones in.
 %   N. I is either a row vector, or a matrix with Neurones indexed across
@@ -106,13 +110,14 @@ function  varargout = lif( fstr , varargin )
 %   output argument N.
 %   
 % 
-% [ S , N ] = lif( 'sim' , N , I ). Runs a simulation using LIF network
-%   struct N and input current I in nA for all neurones. I can be a single
-%   row vector containing the input current time series, or a matrix with a
-%   row of current input values for each separate LIF neurone in N. If I is
-%   a row vector then the same input is applied to each neurone. Either
-%   way, the input is first scaled by terms C.Ie and C.Ii, according to the
-%   type of each neurone.
+% [ S , N ] = lif( 'sim' , N , I )
+%   
+%   Runs a simulation using LIF network struct N and input current I in nA
+%   for all neurones. I can be a single row vector containing the input
+%   current time series, or a matrix with a row of current input values for
+%   each separate LIF neurone in N. If I is a row vector then the same
+%   input is applied to each neurone. Either way, the input is first scaled
+%   by terms C.Ie and C.Ii, according to the type of each neurone.
 %   
 %   Returns struct S containing the results of the simulation, with fields:
 %   
