@@ -584,13 +584,13 @@ switch  fstr
   case  'sim'
     
     % Check max number of input/output args
-     narginchk( 3 , 3 )
+     narginchk( 3 , 4 )
     nargoutchk( 0 , 2 )
     
     %- Setup -%
     
-    % Point to input args
-    [ N , I ] = varargin{ : } ;
+    % Point to guaranteed input args
+    [ N , I ] = varargin{ 1 : 2 } ;
     
     % Basic check on LIF network struct
     if  ~ isstruct( N )
@@ -627,6 +627,27 @@ switch  fstr
       
     end % check I
     
+    % Has volflg been provided?
+    if  nargin == 4
+      
+      % Get it
+      volflg = varargin{ 3 } ;
+      
+      % Check volflg
+      if  ~ isscalar( volflg )  ||  ~( isnumeric( volflg ) || ...
+          islogical( volflg ) )
+        
+        error( 'lif: sim, volflg must be scalar logical or numeric' )
+        
+      end % check
+      
+    % No, set default
+    else
+      
+      volflg = true ;
+      
+    end % volflg
+    
     % Convert unit of input from current in nA to voltage in mV. Now the I
     % simply stands for 'I'nput.
     I = I ./ C.C ;
@@ -641,7 +662,12 @@ switch  fstr
     
     % Allocate output
     S.spk = false( C.N , Nt ) ;
-    S.vol = zeros( C.N , Nt ) ;
+    
+    if  volflg
+      S.vol = zeros( C.N , Nt ) ;
+    else
+      S.vol = [ ] ;
+    end
     
     % Store state of random number generator and apply network's state
     rngtmp = rng( N.rng ) ;
@@ -662,7 +688,7 @@ switch  fstr
     
     % Store initial state
     S.spk( i , 1 ) = 1 ;
-    S.vol( : , 1 ) = V ;
+    if  volflg , S.vol( : , 1 ) = V ; end
     
     % And also store the current state of the random number generator
     N.rng = rng ;
@@ -696,7 +722,7 @@ switch  fstr
       
       % Store current state of network
       S.spk( i , t ) = 1 ;
-      S.vol( : , t ) = V ;
+      if  volflg , S.vol( : , t ) = V ; end
       
     end % time
     
