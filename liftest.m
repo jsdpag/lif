@@ -113,37 +113,13 @@ for  c = C
   % Show progress
   drawnow
   
-  % Allocate spike-triggered average accumulator and spike counter
-  STA = zeros( 2 , 200 / c.dt + 1 ) ; num = [ 0 , 0 ] ;
-  
-  % Neurones
-  for  n = 1 : c.N
-    
-    % Type of neurone
-    if  ismember( n , N.e ) , j = 1 ; else , j = 2 ; end
-    
-    % Locate spikes' linear indices
-    spk = find( S.spk( n , : ) ) ;
-    
-    % Throw away anything near the edges
-    spk( spk < 201 | spk > ms / c.dt - 200 ) = [] ;
-    
-    % Accumulate STA across spikes
-    for i = spk
-      STA( j , : ) = STA( j , : )  +  I( 1 , i - 200 : i + 200 ) ;
-    end
-    
-    % Count spikes from this neurone
-    num( j ) = num( j ) + numel( spk ) ;
-  
-  end % units
+  % Calculate spike-triggered average separately for excitatory and
+  % inhibitory neurones
+  STA = lif( 'sta' , N , I , S )' ;
   
   % STA plot
   pix = pix + 1 ;
   ax = subplot( numel( C ) , 2 , pix , AXPARS{ : } ) ;
-  
-  % Take average across spikes, and smooth slightly
-  STA = STA' ./ num ;
   
   % Smooth slightly
   if  ~ isempty( KRNSTA ) , STA = makconv( STA , KRNSTA , 's' ) ; end
