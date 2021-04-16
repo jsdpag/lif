@@ -111,7 +111,7 @@ function  varargout = lif( fstr , varargin )
 %   
 % 
 % [ S , N ] = lif( 'sim' , N , I )
-%       ... = lif( 'sim' , ... , volflg )
+%       ... = lif( 'sim' , N , I , volflg )
 %   
 %   Runs a simulation using LIF network struct N and input current I in nA
 %   for all neurones. I can be a single row vector containing the input
@@ -139,6 +139,32 @@ function  varargout = lif( fstr , varargin )
 %   This behaviour may be desirable if voltage membrane output is not
 %   required or if the simulation is very large; substantially less memory
 %   will be used if the voltages are not saved and returned.
+% 
+% 
+% A = lif( 'sta' , N , I , S )
+% A = lif( 'sta' , N , I , S , w )
+% A = lif( 'sta' , N , I , S , w , avgflg )
+%   
+%   Computes spike-triggered average A of input I aligned to spikes in
+%   raster S.spk from network N. If I is a vector, then all spikes are
+%   compared against the same input. But if I is a matrix then I must have
+%   the same size as S.spk, and spikes from row S.spk( r , : ) are only
+%   compared against input from I( r , : ). w is optional and gives the
+%   width of the STA in milliseconds (default 200ms). The STA is computed
+%   from -w up to +w in C.dt steps. Hence, A is ceil( 2 * w / C.dt ) + 1
+%   long in the time domain; the +1 term accounts for the time bin that
+%   contains the spike. The size of A depends on optional input avgflg (set
+%   w to empty i.e. [ ] for default value), which is a character string
+%   that controls how the STA is averaged across neurones in N. avgflg can
+%   be one of the following:
+%   
+%      'all' - STA computed from all spikes. Returns row vector in A.
+%     'type' - STA computed separately for excitatory and inibitory
+%       neurones. A is a 2 x Time array, with row order [ excitatory STA ;
+%       inhibitory STA ]. [DEFAULT]
+%     'each' - STA computed separately for each neurone. A is C.N x Time
+%       array in which A( i , : ) is the STA for the nth neurone in N,
+%       corresponding to spike raster S.spk( i , : ).
 % 
 % 
 % Written by Jackson Smith - ESI Fries Lab - April 2021
