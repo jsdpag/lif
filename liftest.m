@@ -77,8 +77,8 @@ for  c = C
   % Set common rng state
   N.rng = rngsta ;
   
-  % Run simulation
-  S = lif( 'sim' , N , I ) ;
+  % Run simulation, discard membrane voltage
+  S = lif( 'sim' , N , I , false ) ;
   
   % PSTH [ Excitatory , Inhibitory ]
   X = [ mean( S.spk( N.e , : ) , 1 ) ;
@@ -164,7 +164,8 @@ for  c = C
         c.psp.ie , c.psp.ei , c.psp.ii ) ;
 	
 	% Print params
-  text( ax.XLim( 1 ) , ax.YLim( 2 ) , str , 'VerticalAlignment' , 'top' )
+  text( ax.XLim( 1 ) , ax.YLim( 2 ) , str , 'VerticalAlignment' , 'top',...
+    'FontSize' , 7.5 )
   
   % Show progress
   drawnow
