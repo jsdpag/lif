@@ -609,49 +609,19 @@ switch  fstr
   
   case  'sim'
     
+    
+    %- Check input args -%
+    
     % Check max number of input/output args
      narginchk( 3 , 4 )
     nargoutchk( 0 , 2 )
     
-    %- Setup -%
-    
     % Point to guaranteed input args
     [ N , I ] = varargin{ 1 : 2 } ;
     
-    % Basic check on LIF network struct
-    if  ~ isstruct( N )
-      error( 'lif: sim, N must be LIF network struct' )
-    end
-    
-    % Point to network parameters
-    C = N.C ;
-    
-    % Check input current format
-    if  ~ isa( I , 'double' )
-      
-      error( 'lif: sim, I must be double floating point' )
-      
-    % No input
-    elseif  isempty( I )
-      
-      error( 'lif: sim, I is empty' )
-      
-    % This is a row vector or matrix
-    elseif  ~ isrow( I )  &&  ~ ismatrix( I )
-      
-      error( 'lif: sim, I must be a row vector or matrix' )
-      
-    % Check number of rows match number of neurones, if matrix
-    elseif  ~ isvector( I )  &&  ismatrix( I )  &&  C.N ~= size( I , 1 )
-      
-      error( 'lif: sim, I must have one row per LIF neurone' )
-      
-    % Invalid numerical values
-    elseif  ~ all( isfinite( I ) , 'all' )
-      
-      error( 'lif: sim, I must have finite numerical values' )
-      
-    end % check I
+    % Check that input guaranteed input N and I is correct. Return a
+    % pointer to the constants struct.
+    C = check_args( fstr , N , I ) ;
     
     % Has volflg been provided?
     if  nargin == 4
@@ -673,6 +643,9 @@ switch  fstr
       volflg = true ;
       
     end % volflg
+    
+    
+    %- Setup -%
     
     % Convert unit of input from current in nA to voltage in mV. Now the I
     % simply stands for 'I'nput.
@@ -758,10 +731,63 @@ switch  fstr
     varargout = { S , N } ;
     
     
+  %-- Compute spike-triggered average(s) --%
+    
+  case  'sta'
+    
+    
+    
   %-- Function string is not recognised --%
   
   otherwise , error( 'fstr string unrecognised: %s' , fstr )
   
     
 end % func selection
+
+
+end %%% lif %%%
+
+
+%%% Local function %%%
+
+% Check format of N and I input arguments, return pointer to constants
+% struct
+function  C = check_args( fstr , N , I )
+  
+  % Basic check on LIF network struct
+  if  ~ isstruct( N )
+    error( 'lif: %s, N must be LIF network struct' , fstr )
+  end
+
+  % Point to network parameters
+  C = N.C ;
+    
+  % Check input current format
+  if  ~ isa( I , 'double' )
+
+    error( 'lif: %s, I must be double floating point' , fstr )
+
+  % No input
+  elseif  isempty( I )
+
+    error( 'lif: %s, I is empty' , fstr )
+
+  % This is a row vector or matrix
+  elseif  ~ isrow( I )  &&  ~ ismatrix( I )
+
+    error( 'lif: %s, I must be a row vector or matrix' , fstr )
+
+  % Check number of rows match number of neurones, if matrix
+  elseif  ~ isvector( I )  &&  ismatrix( I )  &&  C.N ~= size( I , 1 )
+
+    error( 'lif: %s, I must have one row per LIF neurone' , fstr )
+
+  % Invalid numerical values
+  elseif  ~ all( isfinite( I ) , 'all' )
+
+    error( 'lif: %s, I must have finite numerical values' , fstr )
+
+  end % check I
+  
+end % check_I
 
