@@ -111,6 +111,7 @@ function  varargout = lif( fstr , varargin )
 %   
 % 
 % [ S , N ] = lif( 'sim' , N , I )
+%       ... = lif( 'sim' , ... , volflg )
 %   
 %   Runs a simulation using LIF network struct N and input current I in nA
 %   for all neurones. I can be a single row vector containing the input
@@ -130,6 +131,14 @@ function  varargout = lif( fstr , varargin )
 %   Note that the initial membrane potential will be randomly sampled
 %   uniformly between C.V.leak and C.V.threshold. Hence, state N.rng is
 %   updated and returned in output N.
+%   
+%   Optional input argument volflg is used to control whether or not
+%   membrane voltages are saved and returned in S.vol. If volflg is true or
+%   non-zero (default) then voltages are saved and returned. Otherwise, if
+%   volflg is false or zero, then S.vol returns an empty array i.e. [ ].
+%   This behaviour may be desirable if voltage membrane output is not
+%   required or if the simulation is very large; substantially less memory
+%   will be used if the voltages are not saved and returned.
 % 
 % 
 % Written by Jackson Smith - ESI Fries Lab - April 2021
