@@ -150,8 +150,8 @@ function  varargout = lif( fstr , varargin )
 %   compared against the same input. But if I is a matrix then I must have
 %   the same size as S.spk, and spikes from row S.spk( r , : ) are only
 %   compared against input from I( r , : ). w is optional and gives the
-%   width of the STA in milliseconds (default 200ms). The STA is computed
-%   from -w up to +w in C.dt steps. Hence, A is ceil( 2 * w / C.dt ) + 1
+%   width of the STA in milliseconds (default 100ms). The STA is computed
+%   from -w up to +w in C.dt steps. Hence, A is 2 * ceil( w / C.dt ) + 1
 %   long in the time domain; the +1 term accounts for the time bin that
 %   contains the spike. The size of A depends on optional input avgflg (set
 %   w to empty i.e. [ ] for default value), which is a character string
@@ -165,6 +165,10 @@ function  varargout = lif( fstr , varargin )
 %     'each' - STA computed separately for each neurone. A is C.N x Time
 %       array in which A( i , : ) is the STA for the nth neurone in N,
 %       corresponding to spike raster S.spk( i , : ).
+%   
+%   Note that any spike occurring within w ms of the beginning or end of
+%   the simulation will be ignored, because these cannot contribute to an
+%   entire STA window's worth of data.
 % 
 % 
 % Written by Jackson Smith - ESI Fries Lab - April 2021
@@ -619,8 +623,8 @@ switch  fstr
     % Point to guaranteed input args
     [ N , I ] = varargin{ 1 : 2 } ;
     
-    % Check that input guaranteed input N and I is correct. Return a
-    % pointer to the constants struct.
+    % Check that guaranteed input N and I is correct. Return a pointer to
+    % the constants struct.
     C = check_args( fstr , N , I ) ;
     
     % Has volflg been provided?
@@ -736,6 +740,135 @@ switch  fstr
   case  'sta'
     
     
+    %- Check input args -%
+    
+    % Check max number of input/output args
+     narginchk( 4 , 6 )
+    nargoutchk( 0 , 1 )
+    
+    % Point to guaranteed input args
+    [ N , I , S ] = varargin{ 1 : 3 } ;
+    
+    % Check that guaranteed input is correct. Return a pointer to the
+    % constants struct.
+    C = check_args( fstr , N , I , S ) ;
+    
+    % Number of input current time steps
+    Nt = size( I , 2 ) ;
+    
+    % Check that number of simulation time steps is matched
+    if  Nt ~= size( S.spk , 2 )
+      error( 'lif: sta, number of time steps in S.spk is not equal to I' )
+    end
+    
+    % Did user provide arg 'w'?
+    if  nargin >= 5
+      
+      % Get it
+      w = varargin{ 4 } ;
+      
+      % Check
+      if  ~isempty( w ) && ( ~isscalar( w )  ||  ~isnumeric( w )  ||  ...
+          ~isfinite( w )  ||  w <= 0 )
+        error( 'lif: sta, w must be finite scalar numeric > 0, or empty' )
+      end
+      
+    % w not given, set empty to trigger default
+    else
+      
+      w = [ ] ;
+      
+    end % w
+    
+    % If w is empty then return default in milliseconds.
+    if  isempty( w ) , w = 100 ; end
+    
+    
+    % Did user provide avgflg?
+    if  nargin == 6
+      
+      % Get it
+      avgflg = varargin{ 5 } ;
+      
+      % Check basic form
+      if  ~ ischar( avgflg )  ||  ~ isrow( avgflg )
+        error( 'lif: sta, avgflg must be a char string' )
+      end
+      
+    % Default is 'type'
+    else
+      
+      avgflg = 'type' ;
+      
+    end % avgflg
+    
+    
+    %- Setup -%
+    
+    % Is there a separate input current for each neurone?
+    increp = size( I , 1 )  ==  C.N ;
+    
+    % Convert w from milliseconds to time steps
+    w = w / C.dt ;
+    
+    % Total width of STA, including leading and tailing segments before and
+    % after the spike, and of course the spike time bin
+    Na = 2 * w + 1 ;
+    
+    % Determine the number of different STA's that will be returned
+    switch  avgflg
+      case   'all' , Nsta =   1 ;
+      case  'type' , Nsta =   2 ;
+      case  'each' , Nsta = C.N ;
+      otherwise , error( 'lif: sta, avgflg unrecognised: %s' , avgflg )
+    end
+    
+    % Allocate variables to accumulate the sum of spike-triggered input
+    % current, and the number of spikes. Hence, initialise to zero.
+      A = zeros( Nsta , Na ) ;
+    num = zeros( Nsta ,  1 ) ;
+    
+    
+    %- Compute STA -%
+    
+    % Neurones
+    for  n = 1 : C.N
+      
+      % Determine which STA to accumulate spikes to
+      switch  avgflg
+        case   'all' , a = 1 ;
+        case  'type' , a = 1 + ( C.Ne < n ) ;
+        case  'each' , a = n ;
+      end
+      
+      % Determine which input current time series to use
+      if  increp , i = n ; else , i = 1 ; end
+      
+      % Locate indices of time bins containing a spike
+      SPK = find( S.spk( n , : ) ) ;
+      
+      % Throw away anything near the edges
+      SPK( SPK < w + 1 | SPK > Nt - w ) = [] ;
+      
+      % Accumulate STA across spikes
+      for spk = SPK
+        A( a , : ) = A( a , : )  +  I( i , spk - w : spk + w ) ;
+      end
+
+      % Count spikes from this neurone
+      num( a ) = num( a ) + numel( SPK ) ;
+      
+    end % neurones
+    
+    % Convert from sum to average, uses binary singleton expansion
+    A = A ./ num ;
+    
+    
+    %- Done -%
+    
+    % Return output argument A
+    varargout = { A } ;
+    
     
   %-- Function string is not recognised --%
   
@@ -752,7 +885,7 @@ end %%% lif %%%
 
 % Check format of N and I input arguments, return pointer to constants
 % struct
-function  C = check_args( fstr , N , I )
+function  C = check_args( fstr , N , I , varargin )
   
   % Basic check on LIF network struct
   if  ~ isstruct( N )
@@ -788,6 +921,24 @@ function  C = check_args( fstr , N , I )
     error( 'lif: %s, I must have finite numerical values' , fstr )
 
   end % check I
+  
+  % S not provided
+  if  nargin < 4 , return , end
+  
+  % Point to S
+  S = varargin{ 1 } ;
+  
+  % Basic check on simulation output struct
+  if  ~ isstruct( S )
+    
+    error( 'lif: %s, S must be simulation output struct' , fstr )
+    
+  % Look for .spk field
+  elseif  ~ any( ismember( 'spk' , fieldnames( S ) ) )
+    
+    error( 'lif: %s, S is missing field .spk' , fstr )
+    
+  end % S
   
 end % check_I
 
