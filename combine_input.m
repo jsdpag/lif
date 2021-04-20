@@ -143,6 +143,24 @@ sta = runsim( INCOMB , STAWID_MS , iname , N , I ) ;
 plotsta( OUTDIR , PDFFLG , INCOMB , iname , timsta , sta )
 
 
+%%% Sinusoid plus uniform white noise %%%
+
+% Input name
+iname = 'Sine plus uni noise' ;
+
+% Generate input current 1 - Default sinusoid
+[ I( 1 , : ) , N ] = lif( 'input' , N , 0 , DURONI_MS ,  'sine' , [ ] ) ;
+
+% Generate input 2 - Uniform white noise
+[ I( 2 , : ) , N ] = lif( 'input' , N , 0 , DURONI_MS , 'noise' , [ ] ) ;
+
+% Evaluate using each method of input combination
+sta = runsim( INCOMB , STAWID_MS , iname , N , I ) ;
+
+% Plot and save result
+plotsta( OUTDIR , PDFFLG , INCOMB , iname , timsta , sta )
+
+
 %%% DONE %%%
 
 % Clear workspace
