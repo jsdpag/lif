@@ -66,14 +66,16 @@ function  varargout = lif( fstr , varargin )
 %     Thus, if amp > 0 then the ramp is increasing over time, and if amp <
 %     0 then the ramp is decreasing over time.
 %   
-%   'sine' - Sine wave, where par is [ base , amp , freq ]. The baseline
-%     (base) and amplitude (amp) are in nA, and the frequency (freq) is in
-%     Hz. If par is empty then base = 0nA, amp = 1.5nA, and freq = 40Hz by
-%     default. The waveform is constructed so that the current at time t in
+%   'sine' - Sine wave, where par is [ base , amp , freq , phase ]. The
+%     baseline (base) and amplitude (amp) are in nA, and the frequency
+%     (freq) is in Hz, and the phase is in radians. If par is empty then
+%     base = 0nA, amp = 1.5nA, freq = 40Hz, and phase = -pi/2 by default.
+%     The waveform is constructed so that the current at time t in
 %     milliseconds from the start of the ON phase is:
-%       base  +  ( 1 + sin( 2*pi * freq * t/1e3 - pi/2 ) ) / 2 * amp.
-%     The -pi/2 term causes the sine wave to start at its minimum, avoiding
-%     any abrupt step at the start of the ON phase, if base = 0.
+%       base  +  ( 1 + sin( 2*pi * freq * t/1e3 + phase ) ) / 2 * amp.
+%     The default phase = -pi/2 causes the sine wave to start at its
+%     minimum, avoiding any abrupt step at the start of the ON phase, if
+%     base = 0.
 %   
 %   'noise' - White noise stimulus sampled from a uniform distribution. par
 %     is [ base , amp ] in nA so that the current at time point t is
@@ -491,11 +493,12 @@ switch  fstr
           base = 0.0 ;
            amp = 1.5 ;
           freq =  40 ;
+         phase = -pi/2 ;
           
         % Otherwise, check that the correct number of values was given
-        elseif  numel( par ) ~= 3
+        elseif  numel( par ) ~= 4
           
-          error( 'lif: input, sine, par must have 3 values' )
+          error( 'lif: input, sine, par must have 4 values' )
           
         % Extract parameters
         else
@@ -503,14 +506,15 @@ switch  fstr
           base = par( 1 ) ;
            amp = par( 2 ) ;
           freq = par( 3 ) ;
+         phase = par( 4 ) ;
           
         end % check par
         
         % Time points, in seconds
-        t = ( 1 : on ) .* C.dt ./ 1e3 ;
+        t = ( 0 : on - 1 ) .* C.dt ./ 1e3 ;
         
         % Build sinusoidal waveform
-        on = base  +  ( 1 + sin( 2*pi * freq * t - pi/2 ) ) ./ 2 .* amp ;
+        on = base  +  ( 1 + sin( 2*pi * freq * t + phase ) ) ./ 2 .* amp ;
         
         % Build waveform
         I = [ off , on , off ] ;
