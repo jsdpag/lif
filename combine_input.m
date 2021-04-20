@@ -322,7 +322,7 @@ function  plotsta( OUTDIR , PDFFLG , INCOMB , iname , t , sta )
   fignam = fullfile( OUTDIR , [ iname , '.pdf' ] ) ;
   
   % Pre-configured figure that is approximately A4
-  fig = makfig( -1 ) ;
+  fig = makfig( -0.95 ) ;
   
   % Panels
   for  pix = 1 : numel( sta )
