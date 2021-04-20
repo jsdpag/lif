@@ -425,7 +425,9 @@ function  plotsta( OUTDIR , PDFFLG , INCOMB , iname , t , sta )
   drawnow
   
   % Print figure to PDF file
-  if  PDFFLG , print( fig , '-dpdf' , '-painters' , fignam ) , end
+  if  PDFFLG
+    print( fig , '-bestfit' , '-dpdf' , '-painters' , fignam )
+  end
   
 end % plotsta
 
